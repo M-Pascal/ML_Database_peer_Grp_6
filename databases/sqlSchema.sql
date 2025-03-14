@@ -1,6 +1,3 @@
--- Create a new database (if it doesn't exist)
-CREATE DATABASE IF NOT EXISTS cancer_diagnosis_db;
-
 -- Select the database
 USE cancer_diagnosis_db;
 
