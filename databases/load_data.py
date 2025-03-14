@@ -1,13 +1,19 @@
 import os
-from dotenv import load_dotenv
 import pandas as pd
 import mysql.connector
 from mysql.connector import Error
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Load the dataset
 df = pd.read_csv("../dataset/data.csv")
 
-# Connect to MySQL
+# Print column names to verify
+print(df.columns)
+
+# Database connection parameters
 db_params = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
@@ -19,16 +25,12 @@ db_params = {
 try:
     conn = mysql.connector.connect(**db_params)
     cursor = conn.cursor()
-
     print("Connected to MySQL")
 
-    # Define SQL INSERT statements
-    insert_patient = """
-    INSERT INTO patients (id, diagnosis)
-    VALUES (%s, %s)
-    ON DUPLICATE KEY UPDATE diagnosis = VALUES(diagnosis);
-    """
+    # Call stored procedure for inserting patients
+    insert_patient = "CALL InsertPatient(%s, %s);"
 
+    # Define SQL INSERT statements
     insert_tumor_mean = """
     INSERT INTO tumor_mean (
         id, radius_mean, texture_mean, perimeter_mean, area_mean, 
@@ -57,7 +59,7 @@ try:
     for _, row in df.iterrows():
         patient_id = str(row["id"])
         
-        # Insert into Patients
+        # Insert into Patients using Stored Procedure
         cursor.execute(insert_patient, (patient_id, row["diagnosis"]))
         
         # Insert into TumorMean
@@ -83,7 +85,7 @@ try:
 
     # Commit changes
     conn.commit()
-    print("Data successfully inserted into Database(MySQL).")
+    print("Data successfully inserted into Database (MySQL).")
 
 except Error as e:
     print(f"Error: {e}")
